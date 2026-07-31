@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from data import ANTICIPO_COLUMN, load_directory, load_temporal, money
+from data import ANTICIPO_COLUMN, TASA_COLUMN, load_directory, load_temporal, money
 
 
 st.set_page_config(
@@ -88,6 +88,7 @@ financial_columns = [
     "AÑO",
     "INGRESOS (*)",
     "TOTAL (*)",
+    TASA_COLUMN,
     ANTICIPO_COLUMN,
     "GANANCIA NETA DEL PERIODO (30701)",
     "PÉRDIDA NETA DEL PERIODO (30702)",
@@ -101,6 +102,7 @@ st.dataframe(
     column_config={
         column: st.column_config.NumberColumn(column, format="$%.2f")
         for column in financial_columns
-        if column != "AÑO"
-    },
+        if column not in {"AÑO", TASA_COLUMN}
+    }
+    | {TASA_COLUMN: st.column_config.NumberColumn(TASA_COLUMN, format="percent")},
 )

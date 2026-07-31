@@ -13,6 +13,7 @@ DIRECTORIO_PATH = BASE_DIR / "directorio_core.parquet"
 TASAS_PATH = BASE_DIR / "TablaTasa.xlsx"
 
 ANTICIPO_COLUMN = "Anticipo Estimado"
+TASA_COLUMN = "Tasa Aplicable"
 PROVINCIA_SIN_DATOS = "SIN INFORMACIÓN"
 
 
@@ -52,17 +53,28 @@ def load_rate_table() -> pd.DataFrame:
     return rates
 
 
-def calculate_estimated_advance(
+def calculate_applicable_rate(
     taxable_base: pd.Series, rate_table: pd.DataFrame
 ) -> pd.Series:
-    """Apply the flat rate corresponding to each TOTAL (*) bracket."""
+    """Return the flat rate corresponding to each TOTAL (*) bracket."""
     base = pd.to_numeric(taxable_base, errors="coerce").fillna(0.0).clip(lower=0.0)
     upper_bounds = rate_table["Hasta numérico"].to_numpy(dtype=float)
     tariffs = rate_table["Tarifa"].to_numpy(dtype=float)
 
     bracket_index = np.searchsorted(upper_bounds, base.to_numpy(dtype=float), side="left")
     bracket_index = np.clip(bracket_index, 0, len(tariffs) - 1)
-    estimated = np.round(base.to_numpy(dtype=float) * tariffs[bracket_index], 2)
+    applicable_rate = tariffs[bracket_index]
+
+    return pd.Series(applicable_rate, index=taxable_base.index, name=TASA_COLUMN)
+
+
+def calculate_estimated_advance(
+    taxable_base: pd.Series, applicable_rate: pd.Series
+) -> pd.Series:
+    """Calculate TOTAL (*) multiplied by its applicable flat rate."""
+    base = pd.to_numeric(taxable_base, errors="coerce").fillna(0.0).clip(lower=0.0)
+    rate = pd.to_numeric(applicable_rate, errors="coerce").fillna(0.0)
+    estimated = np.round(base.to_numpy(dtype=float) * rate.to_numpy(dtype=float), 2)
 
     return pd.Series(estimated, index=taxable_base.index, name=ANTICIPO_COLUMN)
 
@@ -71,8 +83,11 @@ def calculate_estimated_advance(
 def load_temporal() -> pd.DataFrame:
     temporal = pd.read_parquet(TEMPORAL_PATH)
     temporal["RUC"] = _clean_ruc(temporal["RUC"])
-    temporal[ANTICIPO_COLUMN] = calculate_estimated_advance(
+    temporal[TASA_COLUMN] = calculate_applicable_rate(
         temporal["TOTAL (*)"], load_rate_table()
+    )
+    temporal[ANTICIPO_COLUMN] = calculate_estimated_advance(
+        temporal["TOTAL (*)"], temporal[TASA_COLUMN]
     )
     return temporal
 

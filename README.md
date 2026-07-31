@@ -1,6 +1,6 @@
 # Dashboard de anticipo estimado
 
-Aplicación Streamlit que muestra todas las variables de `temporal.parquet`, calcula el anticipo estimado con los tramos de `TablaTasa.xlsx` y permite filtrar por ingresos, anticipo y provincia. Al seleccionar una empresa se abre una página con su información de `directorio_core.parquet`.
+Aplicación Streamlit que muestra todas las variables de `temporal.parquet`, la tasa aplicable y el anticipo estimado calculados con los tramos de `TablaTasa.xlsx`. Permite filtrar por ingresos, anticipo y provincia. Al seleccionar una empresa se abre una página con su información de `directorio_core.parquet`.
 
 ## Ejecución local
 

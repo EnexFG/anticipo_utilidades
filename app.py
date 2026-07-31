@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from data import ANTICIPO_COLUMN, compact_money, load_dashboard_data
+from data import ANTICIPO_COLUMN, TASA_COLUMN, compact_money, load_dashboard_data
 
 
 st.set_page_config(
@@ -20,6 +20,7 @@ def render_company_table(filtered: pd.DataFrame) -> None:
         "AÑO",
         "INGRESOS (*)",
         "TOTAL (*)",
+        TASA_COLUMN,
         ANTICIPO_COLUMN,
         "GANANCIA NETA DEL PERIODO (30701)",
         "PÉRDIDA NETA DEL PERIODO (30702)",
@@ -46,6 +47,9 @@ def render_company_table(filtered: pd.DataFrame) -> None:
             ),
             "TOTAL (*)": st.column_config.NumberColumn(
                 "Base imponible · TOTAL (*)", format="$%.2f"
+            ),
+            TASA_COLUMN: st.column_config.NumberColumn(
+                TASA_COLUMN, format="percent"
             ),
             ANTICIPO_COLUMN: st.column_config.NumberColumn(
                 ANTICIPO_COLUMN, format="$%.2f"

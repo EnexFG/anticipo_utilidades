@@ -100,9 +100,13 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
     column_config={
-        column: st.column_config.NumberColumn(column, format="$%.2f")
+        column: st.column_config.NumberColumn(column, format="dollar", step=0.01)
         for column in financial_columns
         if column not in {"AÑO", TASA_COLUMN}
     }
-    | {TASA_COLUMN: st.column_config.NumberColumn(TASA_COLUMN, format="percent")},
+    | {
+        TASA_COLUMN: st.column_config.NumberColumn(
+            TASA_COLUMN, format="percent", step=0.0001
+        )
+    },
 )

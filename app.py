@@ -43,28 +43,28 @@ def render_company_table(filtered: pd.DataFrame) -> None:
             "RUC": st.column_config.TextColumn("RUC", width="medium"),
             "AÑO": st.column_config.TextColumn("Año", width="small"),
             "INGRESOS (*)": st.column_config.NumberColumn(
-                "Ingresos (*)", format="$%.2f"
+                "Ingresos (*)", format="dollar", step=0.01
             ),
             "TOTAL (*)": st.column_config.NumberColumn(
-                "Base imponible · TOTAL (*)", format="$%.2f"
+                "Base imponible · TOTAL (*)", format="dollar", step=0.01
             ),
             TASA_COLUMN: st.column_config.NumberColumn(
-                TASA_COLUMN, format="percent"
+                TASA_COLUMN, format="percent", step=0.0001
             ),
             ANTICIPO_COLUMN: st.column_config.NumberColumn(
-                ANTICIPO_COLUMN, format="$%.2f"
+                ANTICIPO_COLUMN, format="dollar", step=0.01
             ),
             "GANANCIA NETA DEL PERIODO (30701)": st.column_config.NumberColumn(
-                "Ganancia neta del período", format="$%.2f"
+                "Ganancia neta del período", format="dollar", step=0.01
             ),
             "PÉRDIDA NETA DEL PERIODO (30702)": st.column_config.NumberColumn(
-                "Pérdida neta del período", format="$%.2f"
+                "Pérdida neta del período", format="dollar", step=0.01
             ),
             "GANANCIAS ACUMULADAS (30601)": st.column_config.NumberColumn(
-                "Ganancias acumuladas", format="$%.2f"
+                "Ganancias acumuladas", format="dollar", step=0.01
             ),
             "PÉRDIDAS ACUMULADAS (30602)": st.column_config.NumberColumn(
-                "Pérdidas acumuladas", format="$%.2f"
+                "Pérdidas acumuladas", format="dollar", step=0.01
             ),
             "PROVINCIA": st.column_config.TextColumn("Provincia", width="medium"),
         },

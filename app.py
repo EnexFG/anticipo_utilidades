@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 import streamlit as st
 
@@ -28,11 +30,70 @@ def render_company_table(filtered: pd.DataFrame) -> None:
         "PÉRDIDAS ACUMULADAS (30602)",
         "PROVINCIA",
     ]
-    display_data = filtered.loc[:, table_columns].reset_index(drop=True)
+
+    sort_options = {
+        "Empresa": "NOMBRE",
+        "RUC": "RUC",
+        "Año": "AÑO",
+        "Ingresos (*)": "INGRESOS (*)",
+        "Base imponible · TOTAL (*)": "TOTAL (*)",
+        TASA_COLUMN: TASA_COLUMN,
+        ANTICIPO_COLUMN: ANTICIPO_COLUMN,
+        "Ganancia neta del período": "GANANCIA NETA DEL PERIODO (30701)",
+        "Pérdida neta del período": "PÉRDIDA NETA DEL PERIODO (30702)",
+        "Ganancias acumuladas": "GANANCIAS ACUMULADAS (30601)",
+        "Pérdidas acumuladas": "PÉRDIDAS ACUMULADAS (30602)",
+        "Provincia": "PROVINCIA",
+    }
+
+    st.subheader("Tabla de empresas")
+    sort_column_ui, sort_direction_ui, page_size_ui = st.columns([1.5, 1, 1])
+    with sort_column_ui:
+        sort_label = st.selectbox("Ordenar por", options=list(sort_options))
+    with sort_direction_ui:
+        descending = st.toggle("Orden descendente", value=False)
+    with page_size_ui:
+        page_size = st.selectbox(
+            "Filas por página", options=[100, 250, 500, 1_000], index=1
+        )
+
+    sorted_data = filtered.sort_values(
+        by=sort_options[sort_label],
+        ascending=not descending,
+        na_position="last",
+        kind="stable",
+    )
+    total_rows = len(sorted_data)
+    total_pages = max(1, math.ceil(total_rows / page_size))
+
+    if st.session_state.get("table_page", 1) > total_pages:
+        st.session_state["table_page"] = 1
+
+    page_ui, range_ui = st.columns([1, 3])
+    with page_ui:
+        current_page = st.number_input(
+            "Página",
+            min_value=1,
+            max_value=total_pages,
+            step=1,
+            key="table_page",
+        )
+
+    start = (current_page - 1) * page_size
+    end = min(start + page_size, total_rows)
+    with range_ui:
+        st.caption(
+            f"Mostrando {start + 1:,}–{end:,} de {total_rows:,} empresas "
+            f"· Página {current_page:,} de {total_pages:,}"
+        )
+
+    display_data = (
+        sorted_data.iloc[start:end].loc[:, table_columns].reset_index(drop=True)
+    )
 
     event = st.dataframe(
         display_data,
-        key="company_table",
+        key=f"company_table_{sort_options[sort_label]}_{descending}_{current_page}_{page_size}",
         use_container_width=True,
         height=610,
         hide_index=True,

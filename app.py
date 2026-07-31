@@ -1,17 +1,25 @@
 from __future__ import annotations
 
+import importlib
 import math
 
 import pandas as pd
 import streamlit as st
 
-from data import (
-    ANTICIPO_COLUMN,
-    CLIENTE_ANDERSEN_COLUMN,
-    TASA_COLUMN,
-    compact_money,
-    load_dashboard_data,
-)
+import data as data_source
+
+
+# Streamlit Cloud can briefly retain an older imported module after a Git update.
+# Reload only when the app detects that app.py and data.py are out of sync.
+if not hasattr(data_source, "CLIENTE_ANDERSEN_COLUMN"):
+    importlib.invalidate_caches()
+    data_source = importlib.reload(data_source)
+
+ANTICIPO_COLUMN = data_source.ANTICIPO_COLUMN
+CLIENTE_ANDERSEN_COLUMN = data_source.CLIENTE_ANDERSEN_COLUMN
+TASA_COLUMN = data_source.TASA_COLUMN
+compact_money = data_source.compact_money
+load_dashboard_data = data_source.load_dashboard_data
 
 
 st.set_page_config(

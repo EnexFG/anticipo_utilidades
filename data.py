@@ -11,15 +11,25 @@ BASE_DIR = Path(__file__).resolve().parent
 TEMPORAL_PATH = BASE_DIR / "temporal.parquet"
 DIRECTORIO_PATH = BASE_DIR / "directorio_core.parquet"
 TASAS_PATH = BASE_DIR / "TablaTasa.xlsx"
+CLIENTES_ANDERSEN_PATH = BASE_DIR / "ClientesAndersen.xlsx"
 
 ANTICIPO_COLUMN = "Anticipo Estimado"
 TASA_COLUMN = "Tasa Aplicable"
+CLIENTE_ANDERSEN_COLUMN = "Cliente Andersen"
 PROVINCIA_SIN_DATOS = "SIN INFORMACIÓN"
 
 
 def _clean_ruc(series: pd.Series) -> pd.Series:
     """Normalize identifiers without converting them to numbers."""
     return series.astype("string").str.strip()
+
+
+def _clean_client_ruc(series: pd.Series) -> pd.Series:
+    """Normalize RUCs read from Excel while preserving shorter identifiers."""
+    ruc = _clean_ruc(series).str.replace(r"\.0$", "", regex=True)
+    twelve_digits = ruc.str.fullmatch(r"\d{12}", na=False)
+    ruc.loc[twelve_digits] = ruc.loc[twelve_digits].str.zfill(13)
+    return ruc
 
 
 @st.cache_data(show_spinner=False)
@@ -99,6 +109,31 @@ def load_directory() -> pd.DataFrame:
     return directory
 
 
+@st.cache_data(show_spinner=False)
+def load_andersen_client_rucs() -> set[str]:
+    clients = pd.read_excel(
+        CLIENTES_ANDERSEN_PATH,
+        dtype={"RUC": "string", CLIENTE_ANDERSEN_COLUMN: "string"},
+    )
+    clients.columns = clients.columns.astype(str).str.strip()
+    if "RUC" not in clients.columns:
+        raise ValueError("ClientesAndersen.xlsx no contiene la columna RUC.")
+
+    clients["RUC"] = _clean_client_ruc(clients["RUC"])
+    if CLIENTE_ANDERSEN_COLUMN in clients.columns:
+        affirmative = (
+            clients[CLIENTE_ANDERSEN_COLUMN]
+            .astype("string")
+            .str.strip()
+            .str.casefold()
+            .isin({"si", "sí", "s", "yes", "true", "1"})
+        )
+        clients = clients.loc[affirmative]
+
+    valid_ruc = clients["RUC"].str.fullmatch(r"\d{13}", na=False)
+    return set(clients.loc[valid_ruc, "RUC"].dropna())
+
+
 @st.cache_data(show_spinner="Preparando dashboard…")
 def load_dashboard_data() -> pd.DataFrame:
     temporal = load_temporal()
@@ -110,6 +145,9 @@ def load_dashboard_data() -> pd.DataFrame:
     )
     dashboard = temporal.merge(provinces, on="RUC", how="left", validate="one_to_one")
     dashboard["PROVINCIA"] = dashboard["PROVINCIA"].fillna(PROVINCIA_SIN_DATOS)
+    dashboard[CLIENTE_ANDERSEN_COLUMN] = np.where(
+        dashboard["RUC"].isin(load_andersen_client_rucs()), "Si", "No"
+    )
     return dashboard
 
 

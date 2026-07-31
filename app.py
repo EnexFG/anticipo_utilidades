@@ -5,7 +5,13 @@ import math
 import pandas as pd
 import streamlit as st
 
-from data import ANTICIPO_COLUMN, TASA_COLUMN, compact_money, load_dashboard_data
+from data import (
+    ANTICIPO_COLUMN,
+    CLIENTE_ANDERSEN_COLUMN,
+    TASA_COLUMN,
+    compact_money,
+    load_dashboard_data,
+)
 
 
 st.set_page_config(
@@ -19,6 +25,7 @@ def render_company_table(filtered: pd.DataFrame) -> None:
     table_columns = [
         "NOMBRE",
         "RUC",
+        CLIENTE_ANDERSEN_COLUMN,
         "AÑO",
         "INGRESOS (*)",
         "TOTAL (*)",
@@ -44,6 +51,7 @@ def render_company_table(filtered: pd.DataFrame) -> None:
         "Ganancias acumuladas": "GANANCIAS ACUMULADAS (30601)",
         "Pérdidas acumuladas": "PÉRDIDAS ACUMULADAS (30602)",
         "Provincia": "PROVINCIA",
+        CLIENTE_ANDERSEN_COLUMN: CLIENTE_ANDERSEN_COLUMN,
     }
 
     st.subheader("Tabla de empresas")
@@ -102,6 +110,9 @@ def render_company_table(filtered: pd.DataFrame) -> None:
         column_config={
             "NOMBRE": st.column_config.TextColumn("Empresa", width="large"),
             "RUC": st.column_config.TextColumn("RUC", width="medium"),
+            CLIENTE_ANDERSEN_COLUMN: st.column_config.TextColumn(
+                CLIENTE_ANDERSEN_COLUMN, width="medium"
+            ),
             "AÑO": st.column_config.TextColumn("Año", width="small"),
             "INGRESOS (*)": st.column_config.NumberColumn(
                 "Ingresos (*)", format="dollar", step=0.01
@@ -158,7 +169,9 @@ advance_maximum = float(data[ANTICIPO_COLUMN].max())
 province_options = sorted(data["PROVINCIA"].dropna().unique().tolist())
 
 st.subheader("Filtros")
-income_column, advance_column, province_column = st.columns(3, gap="large")
+income_column, advance_column, province_column, client_column = st.columns(
+    [1, 1, 1, 0.8], gap="large"
+)
 
 with income_column:
     income_filter_min = st.number_input(
@@ -203,6 +216,12 @@ with province_column:
         placeholder="Todas las provincias",
     )
 
+with client_column:
+    client_filter = st.selectbox(
+        CLIENTE_ANDERSEN_COLUMN,
+        options=["Todos", "Si", "No"],
+    )
+
 if income_filter_min > income_filter_max:
     st.warning("El ingreso mínimo no puede ser mayor que el ingreso máximo.")
     st.stop()
@@ -214,6 +233,8 @@ mask = data["INGRESOS (*)"].between(income_filter_min, income_filter_max)
 mask &= data[ANTICIPO_COLUMN].between(advance_filter_min, advance_filter_max)
 if selected_provinces:
     mask &= data["PROVINCIA"].isin(selected_provinces)
+if client_filter != "Todos":
+    mask &= data[CLIENTE_ANDERSEN_COLUMN].eq(client_filter)
 
 filtered_data = data.loc[mask].copy()
 

@@ -159,9 +159,13 @@ def render_company_table(filtered: pd.DataFrame) -> None:
 
 
 st.title("Anticipo estimado de utilidades")
-st.caption(
-    "El anticipo estimado corresponde a TOTAL (*) multiplicado por la tarifa "
-    "del tramo definido en TablaTasa.xlsx. Selecciona una fila para ver el detalle."
+st.markdown(
+    """
+**Fórmulas de cálculo**
+
+- **TOTAL (*)** = |Ganancia neta del período| + |Pérdida neta del período| + |Ganancias acumuladas| + |Pérdidas acumuladas|.
+- **Anticipo Estimado** = TOTAL (*) × Tasa Aplicable.
+"""
 )
 
 try:

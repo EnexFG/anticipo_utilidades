@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from data import ANTICIPO_COLUMN, TASA_COLUMN, load_directory, load_temporal, money
+from navigation import render_sidebar_navigation
 
 
 st.set_page_config(
@@ -11,6 +12,7 @@ st.set_page_config(
     page_icon="🏢",
     layout="wide",
 )
+render_sidebar_navigation()
 
 
 def value_for_display(value: object) -> str:

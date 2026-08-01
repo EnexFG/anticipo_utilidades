@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 import data as data_source
+from navigation import render_sidebar_navigation
 
 
 # Streamlit Cloud can briefly retain an older imported module after a Git update.
@@ -23,10 +24,11 @@ load_dashboard_data = data_source.load_dashboard_data
 
 
 st.set_page_config(
-    page_title="Anticipo de utilidades",
+    page_title="Tabla completa",
     page_icon="📊",
     layout="wide",
 )
+render_sidebar_navigation()
 
 
 def render_company_table(filtered: pd.DataFrame) -> None:
@@ -163,7 +165,7 @@ st.markdown(
     """
 **Fórmulas de cálculo**
 
-- **TOTAL (*)** = |Ganancia neta del período| + |Pérdida neta del período| + |Ganancias acumuladas| + |Pérdidas acumuladas|.
+- **TOTAL (*)** = Ganancia neta del período − Pérdida neta del período + Ganancias acumuladas − Pérdidas acumuladas.
 - **Anticipo Estimado** = TOTAL (*) × Tasa Aplicable.
 """
 )
